@@ -18,6 +18,9 @@ import Data.These
 
 newtype WrongMap k v = WM (Map k v) deriving (Eq, Ord, Show, Functor, Foldable)
 
+instance Unzip (WrongMap k) where
+    unzip = unzipDefault
+
 instance (Arbitrary k, Arbitrary v, Ord k) => Arbitrary (WrongMap k v) where
     arbitrary = WM <$> arbitrary
     shrink (WM m) = WM <$> shrink m
@@ -46,6 +49,9 @@ instance Ord k => Zip (WrongMap k) where
 newtype WeirdMap k v = WeirdMap (Map k v)
   deriving (Eq, Ord, Show, Functor, Foldable)
 
+instance Unzip (WeirdMap k) where
+    unzip = unzipDefault
+
 instance (Arbitrary k, Arbitrary v, Ord k) => Arbitrary (WeirdMap k v) where
     arbitrary = WeirdMap <$> arbitrary
     shrink (WeirdMap m) = WeirdMap <$> shrink m
@@ -72,6 +78,9 @@ instance Ord k => Zip (WeirdMap k) where
 
 newtype R a = Nest [[a]]
   deriving (Show, Eq, Ord, Functor, Foldable)
+
+instance Unzip R where
+    unzip = unzipDefault
 
 instance Align R where
     nil = Nest []

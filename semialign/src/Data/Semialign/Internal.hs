@@ -121,7 +121,7 @@ oops = error . ("Data.Align: internal error: " ++)
 --          ≡ mapMaybe justHere (toList (align x y))
 -- @
 --
-class Functor f => Semialign f where
+class Unzip f => Semialign f where
     -- | Analogous to @'zip'@, combines two structures by taking the union of
     --   their shapes and using @'These'@ to hold the elements.
     align :: f a -> f b -> f (These a b)
@@ -295,7 +295,7 @@ class Zip f => Repeat f where
 --
 -- For sequence-like types this holds, but for Map-like it doesn't.
 --
-class Zip f => Unzip f where
+class Functor f => Unzip f where
     unzipWith :: (c -> (a, b)) -> f c -> (f a, f b)
     unzipWith f = unzip . fmap f
 
@@ -336,6 +336,12 @@ class (ZipWithIndex i f, Repeat f) => RepeatWithIndex i f | f -> i where
 -------------------------------------------------------------------------------
 -- base
 -------------------------------------------------------------------------------
+
+-- |
+--
+-- @since 1.4
+instance Unzip ((->) e) where
+    unzip = unzipDefault
 
 instance Semialign ((->) e) where
     align f g x = These (f x) (g x)
@@ -661,6 +667,13 @@ instance (RepeatWithIndex i f, RepeatWithIndex j g) => RepeatWithIndex (i, j) (C
 -------------------------------------------------------------------------------
 
 -- Based on the Data.Vector.Fusion.Stream.Monadic zipWith implementation
+
+-- |
+--
+-- @since 1.4
+instance Monad m => Unzip (Stream m) where
+    unzip = unzipDefault
+
 instance Monad m => Align (Stream m) where
     nil = Stream.empty
 
@@ -688,8 +701,15 @@ instance Monad m => Semialign (Stream m) where
                     _               -> Skip (sa, sb, Nothing, False)
 #endif
 
+
 instance Monad m => Zip (Stream m) where
     zipWith = Stream.zipWith
+
+-- |
+--
+-- @since 1.4
+instance Monad m => Unzip (Bundle m v) where
+    unzip = unzipDefault
 
 instance Monad m => Align (Bundle m v) where
     nil = Bundle.empty
