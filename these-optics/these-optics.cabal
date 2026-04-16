@@ -1,7 +1,7 @@
 cabal-version:      >=1.10
 name:               these-optics
 version:            1.0.2
-x-revision:         1
+x-revision:         2
 synopsis:           Optics for These
 homepage:           https://github.com/haskellari/these
 license:            BSD3
