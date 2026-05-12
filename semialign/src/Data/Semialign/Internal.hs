@@ -156,9 +156,17 @@ class Semialign f => Align f where
 -- == Laws
 --
 -- @
--- uncurry align (unalign xs) ≡ xs
 -- unalign (align xs ys) ≡ (xs, ys)
 -- @
+--
+-- Previously 'Unalign' included a right inverse law
+--
+-- @
+-- uncurry align (unalign xs) ≡ xs
+-- @
+--
+-- But this law was removed in 1.4 to allow list-like instances,
+-- where unalign necessarily loses some information.
 --
 -- == Compatibility note
 --
@@ -408,6 +416,16 @@ instance Repeat [] where
 instance Unzip [] where
     unzip = Prelude.unzip
 
+-- |
+--
+-- @since 1.4
+instance Unalign [] where
+    unalign = Prelude.foldr f ([], []) where
+        f :: These a b -> ([a], [b]) -> ([a], [b])
+        f (This x)    ~(xs, ys) = (x : xs,     ys)
+        f (That y)    ~(xs, ys) = (    xs, y : ys)
+        f (These x y) ~(xs, ys) = (x : xs, y : ys)
+
 instance SemialignWithIndex Int []
 instance ZipWithIndex Int []
 instance RepeatWithIndex Int []
@@ -428,6 +446,10 @@ instance Repeat ZipList where
 instance Unzip ZipList where
     unzip (ZipList xs) = (ZipList ys, ZipList zs) where
         (ys, zs) = unzip xs
+
+instance Unalign ZipList where
+    unalign (ZipList xs) = (ZipList ys, ZipList zs) where
+        (ys, zs) = unalign xs
 
 instance SemialignWithIndex Int ZipList
 instance ZipWithIndex Int ZipList
@@ -701,6 +723,29 @@ instance Monad m => Semialign (Stream m) where
                     _               -> Skip (sa, sb, Nothing, False)
 #endif
 
+-- |
+--
+-- @since 1.4
+instance Monad m => Unalign (Stream m) where
+    unalign (Stream stepa s) = (Stream stepb s, Stream stepc s)
+      where
+        stepb i = do
+            r <- stepa i
+            return $ case r of
+                Done                -> Done
+                Skip              j -> Skip j
+                Yield (This  x)   j -> Yield x j
+                Yield (These x _) j -> Yield x j
+                Yield (That    _) j -> Skip j
+
+        stepc i = do
+            r <- stepa i
+            return $ case r of
+                Done                -> Done
+                Skip              j -> Skip j
+                Yield (This  _)   j -> Skip j
+                Yield (These _ y) j -> Yield y j
+                Yield (That    y) j -> Yield y j
 
 instance Monad m => Zip (Stream m) where
     zipWith = Stream.zipWith
@@ -721,6 +766,15 @@ instance Monad m => Semialign (Bundle m v) where
 instance Monad m => Zip (Bundle m v) where
     zipWith = Bundle.zipWith
 
+-- |
+--
+-- @since 1.4
+instance Monad m => Unalign (Bundle m v) where
+    unalign Bundle { sElems = xys, sSize = n } =
+        (Bundle.fromStream xs (Bundle.toMax n), Bundle.fromStream ys (Bundle.toMax n))
+      where
+        ~(xs, ys) = unalign xys
+
 instance Semialign V.Vector where
     alignWith = alignVectorWith
 
@@ -732,6 +786,14 @@ instance Align V.Vector where
 
 instance Unzip V.Vector where
     unzip = V.unzip
+
+-- |
+--
+-- @since 1.4
+instance Unalign V.Vector where
+    -- TODO: it would be more efficient to do unalign imperatively.
+    unalign xys = (unstream xs, unstream ys) where
+        ~(xs, ys) = unalign (stream xys)
 
 alignVectorWith :: (Vector v a, Vector v b, Vector v c)
         => (These a b -> c) -> v a -> v b -> v c

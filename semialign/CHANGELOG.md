@@ -6,6 +6,8 @@
     `instance Unzip ((->) e) where unzip = unzipDefault` was added in this patch.
   - `Unzip f` doesn't imply whole hierarchy, so you may need to change `Unzip f` to `Zip f`
     in the constraints of some of your functions.
+- Relax laws of Unalign allowing list-like instances.
+  - Add `Unalign []` and `Unalign Vector` instances.
 
 # 1.3.1
 
