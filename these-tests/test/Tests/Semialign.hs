@@ -114,7 +114,7 @@ data CSemialign f where
 
 semialignLaws
     :: forall (f :: * -> *).
-       ( Semialign f, Unzip f, Foldable f, Typeable f
+       ( Semialign f, Zip f, Foldable f, Typeable f
        , Eq (f A), Show (f A), Arbitrary (f A)
        , Eq (f B), Show (f B), Arbitrary (f B)
        , Eq (f C), Show (f C), Arbitrary (f C)
@@ -357,7 +357,7 @@ unalignLaws' _ = testGroup "Unalign"
 
 
 unzipLaws'
-    :: forall f proxy. (Unzip f
+    :: forall f proxy. (Zip f
        , Eq (f A), Show (f A), Arbitrary (f A)
        , Eq (f B), Show (f B), Arbitrary (f B)
        , Eq (f C), Show (f C), Arbitrary (f C)

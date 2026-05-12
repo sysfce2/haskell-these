@@ -1,3 +1,12 @@
+# 1.4
+
+- Reorder class hierarchy. `Unzip` is now at the bottom, right above `Functor`.
+  There are two ways things may break:
+  - You may need to add `Unzip` instance if you haven't one already, for example:
+    `instance Unzip ((->) e) where unzip = unzipDefault` was added in this patch.
+  - `Unzip f` doesn't imply whole hierarchy, so you may need to change `Unzip f` to `Zip f`
+    in the constraints of some of your functions.
+
 # 1.3.1
 
 - Support GHC-8.6.5...GHC-9.10.1
